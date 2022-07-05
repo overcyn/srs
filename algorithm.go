@@ -5,6 +5,7 @@ import (
 	"math"
 )
 
+// https://github.com/ap4y/leaf/blob/master/supermemo2_plus.go
 struct SM2PlusCustom {
 	LastReview time.Time
 	Difficulty     float64
