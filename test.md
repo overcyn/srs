@@ -1,13 +1,3 @@
-Cat : Meow <!--srs:20220604,Interval,EF,Repetition-->  
-Dog : Woof <!--srs:MjAyMjA2M=-->  
-Sheep : Baa <!--srs:20220604,4,23-->  
-Cow : Moo <!--srs:20220604,10,92-->  
-
-<!-- srs:20220604,4,4 -->
-Hello
-- - -
-Test
-
 Black : Màu đen <!--srs:20220604,10,92-->  
 Blue : Màu xanh <!--srs:20220604,10,92-->  
 Brown : Màu nâu <!--srs:20220604,10,92-->  
@@ -18,6 +8,18 @@ Purple : Màu tím <!--srs:20220604,10,92-->
 Red : Màu đỏ <!--srs:20220604,10,92-->  
 White : Màu trắng <!--srs:20220604,10,92-->  
 Yellow : Màu vàng <!--srs:20220604,10,92-->  
+
+Sizes : Kích cỡ <!--srs:-->
+Wide : Rộng <!--srs:-->
+Big : To <!--srs:-->
+Deep : Sâu <!--srs:-->
+Long : Dài <!--srs:-->
+Narrow : Chật hẹp <!--srs:-->
+Short : Ngắn <!--srs:-->
+Small : Nhỏ <!--srs:-->
+Tall : Cao <!--srs:-->
+Thick : Dày <!--srs:-->
+Thin : Mỏng <!--srs:-->
 
 Telex ă : aw <!--srs:20220604,10,92-->  
 Telex â : aa <!--srs:20220604,10,92-->  
