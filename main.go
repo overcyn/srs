@@ -15,51 +15,88 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	content, err := ioutil.ReadFile(args[0])
-    if err != nil {
+	file, err := readFile(args[0])
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	lines := strings.Split(string(content),"\n")
-	flashCards := map[int]FlashCard{}
-	for idx, i := range lines {
-		flashCard, err := parse(i)
-		if err == nil {
-			flashCards[idx] = flashCard
-		}
-	}
-	for _, v := range flashCards {
-		fmt.Printf("%v\n", v.front)
-		fmt.Printf("%v\n\n", v.back)
-	}
+	for _, v := range file.cards {
+		fmt.Printf("%v\n", strings.TrimSpace(v.front))
 
-	for {
-		ascii, keycode, err := getChar()
-		fmt.Printf("%v %v %v", ascii, keycode, err)
+		_, _, err := getChar()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("%v\n\n", strings.TrimSpace(v.back))
+
+		fmt.Printf("Score (1-5): ")
+		ascii, _, err := getChar()
+		if err != nil {
+			log.Fatal(err)
+		}
+		found := false
+		for _, i := range []string{"0", "1", "2", "3", "4", "5"} {
+			if string(ascii) == i {
+				found = true
+			}
+		}
+		if !found {
+			return
+		}
+		fmt.Printf("\n\n")
 	}
 }
 
-type FlashCard struct {
+type File struct {
+	filename string
+	lines []string
+	cards map[int]*Card
+}
+
+func readFile(filename string) (*File, error) {
+	content, err := ioutil.ReadFile(filename)
+    if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content),"\n")
+	cards := map[int]*Card{}
+	for idx, i := range lines {
+		flashCard, err := parseCard(i)
+		if err == nil {
+			cards[idx] = flashCard
+		}
+	}
+
+	return &File{
+		filename: filename,
+		lines: lines,
+		cards: cards,
+	}, nil
+}
+
+type Card struct {
 	front string
 	back string
 	comment string
 }
 
-func parse(str string) (FlashCard, error) {
+func parseCard(str string) (*Card, error) {
 	a, b, found := stringsCut(str, "<!--srs:")
 	if !found {
-		return FlashCard{}, errors.New("Missing comment start")
+		return nil, errors.New("Missing comment start")
 	}
 	c, d, found := stringsCut(b, "-->")
 	if !found {
-		return FlashCard{}, errors.New("Missing comment end")
+		return nil, errors.New("Missing comment end")
 	}
 	e, f, found := stringsCut(a, ":")
 	if !found {
-		return FlashCard{}, errors.New("Missing colon separator")
+		return nil, errors.New("Missing colon separator")
 	}
 	_ = d
-	return FlashCard{
+	return &Card{
 		front: e,
 		back: f,
 		comment: c,
