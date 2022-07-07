@@ -9,17 +9,17 @@ Red : Màu đỏ <!--srs:20220604,10,92-->
 White : Màu trắng <!--srs:20220604,10,92-->  
 Yellow : Màu vàng <!--srs:20220604,10,92-->  
 
-Sizes : Kích cỡ <!--srs:-->
-Wide : Rộng <!--srs:-->
-Big : To <!--srs:-->
-Deep : Sâu <!--srs:-->
-Long : Dài <!--srs:-->
-Narrow : Chật hẹp <!--srs:-->
-Short : Ngắn <!--srs:-->
-Small : Nhỏ <!--srs:-->
-Tall : Cao <!--srs:-->
-Thick : Dày <!--srs:-->
-Thin : Mỏng <!--srs:-->
+Sizes : Kích cỡ <!--srs:-->  
+Wide : Rộng <!--srs:-->  
+Big : To <!--srs:-->  
+Deep : Sâu <!--srs:-->  
+Long : Dài <!--srs:-->  
+Narrow : Chật hẹp <!--srs:-->  
+Short : Ngắn <!--srs:-->  
+Small : Nhỏ <!--srs:-->  
+Tall : Cao <!--srs:-->  
+Thick : Dày <!--srs:-->  
+Thin : Mỏng <!--srs:-->  
 
 Telex ă : aw <!--srs:20220604,10,92-->  
 Telex â : aa <!--srs:20220604,10,92-->  

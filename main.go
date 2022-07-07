@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"log"
 	"strings"
 	"fmt"
 	"errors"
-	// "os"
+	"bytes"
+	"os"
 	"github.com/pkg/term"
+	"io/fs"
 )
 
 func main() {
@@ -45,6 +46,10 @@ func main() {
 			return
 		}
 		fmt.Printf("\n\n")
+
+		if err := file.write(); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -54,8 +59,29 @@ type File struct {
 	cards map[int]*Card
 }
 
+func (f *File)write() error {
+	buf := &bytes.Buffer{}
+	for i, line := range f.lines {
+		toWrite := line
+		if card, ok := f.cards[i]; ok {
+			var err error
+			if toWrite, err = card.MarshalString(); err != nil {
+				return err
+			}
+		}
+		if _, err := buf.WriteString(toWrite + "\n"); err != nil {
+			return err
+		}
+	}
+
+	if err := os.WriteFile(f.filename, buf.Bytes(), fs.ModePerm); err != nil {
+		return err
+	}
+	return nil
+}
+
 func readFile(filename string) (*File, error) {
-	content, err := ioutil.ReadFile(filename)
+	content, err := os.ReadFile(filename)
     if err != nil {
 		return nil, err
 	}
@@ -63,10 +89,11 @@ func readFile(filename string) (*File, error) {
 	lines := strings.Split(string(content),"\n")
 	cards := map[int]*Card{}
 	for idx, i := range lines {
-		flashCard, err := parseCard(i)
-		if err == nil {
-			cards[idx] = flashCard
+		c := Card{}
+		if err := c.UnmarshalString(i); err != nil {
+			continue
 		}
+		cards[idx] = &c
 	}
 
 	return &File{
@@ -80,6 +107,31 @@ type Card struct {
 	front string
 	back string
 	comment string
+}
+
+func (c *Card)MarshalString() (string, error) {
+	str := c.front + ":" + c.back + "<!--srs:" + c.comment + "-->  "
+	return str, nil
+}
+
+func (c *Card)UnmarshalString(str string) error {
+	a, b, found := stringsCut(str, "<!--srs:")
+	if !found {
+		return errors.New("Missing comment start")
+	}
+	c1, d, found := stringsCut(b, "-->")
+	if !found {
+		return errors.New("Missing comment end")
+	}
+	e, f, found := stringsCut(a, ":")
+	if !found {
+		return errors.New("Missing colon separator")
+	}
+	_ = d
+	c.front = e
+	c.back = f
+	c.comment = c1
+	return nil
 }
 
 func parseCard(str string) (*Card, error) {
