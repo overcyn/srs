@@ -1,4 +1,4 @@
-Black : Màu đen <!--srs:2.50|1|1d|2022-07-10T00:20:47Z-->
+Black : Màu đen <!--srs:2.60|1✓|1d|2022-07-10T00:35:30Z-->
 Blue : Màu xanh 
 Brown : Màu nâu 
 Gray : Màu xám 

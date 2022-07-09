@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/pkg/term"
 	"io/fs"
 	"log"
 	"os"
@@ -23,29 +22,25 @@ func main() {
 	}
 
 	for _, v := range file.cards {
-		fmt.Printf("%v\n", strings.TrimSpace(v.front))
-		if _, _, err := getChar(); err != nil {
-			log.Fatal(err)
-		}
+		fmt.Printf("%v", strings.TrimSpace(v.front))
+		fmt.Scanln()
+		fmt.Printf("---\n%v\n\n", strings.TrimSpace(v.back))
 
-		fmt.Printf("%v\n\n", strings.TrimSpace(v.back))
-
-		fmt.Printf("Score (0-5): ")
-		var ratingInt int
-		fmt.Scanln(&ratingInt)
-		if ratingInt < 0 || ratingInt > 5 {
-			return
-		}
-		fmt.Printf("\n")
-
-		if time.Since(v.sm.NextReview) > 0 {
+		if time.Since(v.sm.nextReview) > 0 {
+			fmt.Printf("Score (0-5): ")
+			var ratingInt int
+			fmt.Scanln(&ratingInt)
+			if ratingInt < 0 || ratingInt > 5 {
+				return
+			}
+			fmt.Printf("\n")
 			var prevSm = *v.sm
 
 			v.sm.Advance(float64(ratingInt))
 
-			fmt.Printf("Easiness: %.2f → %.2f\n", prevSm.Easiness, v.sm.Easiness)
-			fmt.Printf("Repetition: %v → %v\n", prevSm.Repetition, v.sm.Repetition)
-			fmt.Printf("Interval: %vd → %vd\n", prevSm.Interval, v.sm.Interval)
+			fmt.Printf("Easiness: %.2f → %.2f\n", prevSm.easiness, v.sm.easiness)
+			fmt.Printf("Repetition: %v✓ → %v✓\n", prevSm.repetition, v.sm.repetition)
+			fmt.Printf("Interval: %vd → %vd\n", prevSm.interval, v.sm.interval)
 		}
 
 		// Write to file
@@ -156,43 +151,4 @@ func stringsCut(s, sep string) (before, after string, found bool) {
 		return s[:i], s[i+len(sep):], true
 	}
 	return s, "", false
-}
-
-// Returns either an ascii code, or (if input is an arrow) a Javascript key code.
-func getChar() (ascii int, keyCode int, err error) {
-	t, _ := term.Open("/dev/tty")
-	term.RawMode(t)
-	bytes := make([]byte, 3)
-
-	var numRead int
-	numRead, err = t.Read(bytes)
-	if err != nil {
-		return
-	}
-	if numRead == 3 && bytes[0] == 27 && bytes[1] == 91 {
-		// Three-character control sequence, beginning with "ESC-[".
-
-		// Since there are no ASCII codes for arrow keys, we use
-		// Javascript key codes.
-		if bytes[2] == 65 {
-			// Up
-			keyCode = 38
-		} else if bytes[2] == 66 {
-			// Down
-			keyCode = 40
-		} else if bytes[2] == 67 {
-			// Right
-			keyCode = 39
-		} else if bytes[2] == 68 {
-			// Left
-			keyCode = 37
-		}
-	} else if numRead == 1 {
-		ascii = int(bytes[0])
-	} else {
-		// Two characters read??
-	}
-	t.Restore()
-	t.Close()
-	return
 }
