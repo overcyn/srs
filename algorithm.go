@@ -20,31 +20,37 @@ func NewSupermemo2() *Supermemo2 {
 	return &Supermemo2{
 		nextReview: time.Now(),
 		repetition: 0,
-		easiness:   2.5,
+		easiness:   1.2,
 		interval:   0,
 	}
 }
 
 // Advance advances supermemo state for a card.
 func (sm *Supermemo2) Advance(rating float64) {
+	// Scale by 1.3
+	easiness := sm.easiness + 1.3
+
 	if rating >= 3 {
 		if sm.repetition == 0 {
 			sm.interval = 1
 		} else if sm.repetition == 2 {
 			sm.interval = 6
 		} else {
-			sm.interval = int(math.Round(float64(sm.interval) * sm.easiness))
+			sm.interval = int(math.Round(float64(sm.interval) * easiness))
 		}
 		sm.repetition += 1
 	} else {
 		sm.repetition = 0
 		sm.interval = 1
 	}
-	sm.easiness = sm.easiness + (0.1 - (5-rating)*(0.08+(5-rating)*0.02))
-	if sm.easiness < 1.3 {
-		sm.easiness = 1.3
+	easiness = easiness + (0.1 - (5-rating)*(0.08+(5-rating)*0.02))
+	if easiness < 1.3 {
+		easiness = 1.3
 	}
 	sm.nextReview = time.Now().Add(time.Hour * time.Duration(24*sm.interval))
+
+	// Unscale by 1.3
+	sm.easiness = easiness - 1.3
 }
 
 // MarshalJSON implements json.Marshaller for Supermemo2
@@ -69,6 +75,5 @@ func (sm *Supermemo2) Unmarshal(s string) error {
 		return err
 	}
 	sm.nextReview = nextReview
-	
 	return nil
 }

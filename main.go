@@ -40,7 +40,7 @@ func main() {
 
 			fmt.Printf("Easiness: %.2f → %.2f\n", prevSm.easiness, v.sm.easiness)
 			fmt.Printf("Repetition: %v✓ → %v✓\n", prevSm.repetition, v.sm.repetition)
-			fmt.Printf("Interval: %vd → %vd\n", prevSm.interval, v.sm.interval)
+			fmt.Printf("Interval: %vd → %vd\n\n", prevSm.interval, v.sm.interval)
 		}
 
 		// Write to file
