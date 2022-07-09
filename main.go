@@ -1,15 +1,17 @@
 package main
 
 import (
-	"flag"
-	"log"
-	"strings"
-	"fmt"
-	"errors"
 	"bytes"
-	"os"
+	"errors"
+	"flag"
+	"fmt"
 	"github.com/pkg/term"
 	"io/fs"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -36,17 +38,21 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		found := false
-		for _, i := range []string{"0", "1", "2", "3", "4", "5"} {
-			if string(ascii) == i {
-				found = true
-			}
-		}
-		if !found {
+		ratingInt, err := strconv.Atoi(string(ascii))
+		if err != nil {
 			return
 		}
+		if ratingInt < 0 || ratingInt > 5 {
+			return
+		}
+		rating := float64(ratingInt)
 		fmt.Printf("\n\n")
 
+		if time.Since(v.sm.NextReview) > 0 {
+			v.sm.Advance(rating)
+		}
+
+		// Write to file
 		if err := file.write(); err != nil {
 			log.Fatal(err)
 		}
@@ -55,11 +61,11 @@ func main() {
 
 type File struct {
 	filename string
-	lines []string
-	cards map[int]*Card
+	lines    []string
+	cards    map[int]*Card
 }
 
-func (f *File)write() error {
+func (f *File) write() error {
 	buf := &bytes.Buffer{}
 	for i, line := range f.lines {
 		toWrite := line
@@ -69,8 +75,13 @@ func (f *File)write() error {
 				return err
 			}
 		}
-		if _, err := buf.WriteString(toWrite + "\n"); err != nil {
+		if _, err := buf.WriteString(toWrite); err != nil {
 			return err
+		}
+		if i != len(f.lines)-1 {
+			if _, err := buf.WriteString("\n"); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -82,11 +93,11 @@ func (f *File)write() error {
 
 func readFile(filename string) (*File, error) {
 	content, err := os.ReadFile(filename)
-    if err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	lines := strings.Split(string(content),"\n")
+	lines := strings.Split(string(content), "\n")
 	cards := map[int]*Card{}
 	for idx, i := range lines {
 		c := Card{}
@@ -98,61 +109,50 @@ func readFile(filename string) (*File, error) {
 
 	return &File{
 		filename: filename,
-		lines: lines,
-		cards: cards,
+		lines:    lines,
+		cards:    cards,
 	}, nil
 }
 
 type Card struct {
 	front string
-	back string
-	comment string
+	back  string
+	sm    *Supermemo2
 }
 
-func (c *Card)MarshalString() (string, error) {
-	str := c.front + ":" + c.back + "<!--srs:" + c.comment + "-->  "
+func (c *Card) MarshalString() (string, error) {
+	comment, err := c.sm.Marshal()
+	if err != nil {
+		return "", err
+	}
+	str := c.front + ":" + c.back + "<!--srs:" + comment + "-->"
 	return str, nil
 }
 
-func (c *Card)UnmarshalString(str string) error {
+func (c *Card) UnmarshalString(str string) error {
 	a, b, found := stringsCut(str, "<!--srs:")
 	if !found {
 		return errors.New("Missing comment start")
 	}
-	c1, d, found := stringsCut(b, "-->")
+	c1, _, found := stringsCut(b, "-->")
 	if !found {
 		return errors.New("Missing comment end")
 	}
-	e, f, found := stringsCut(a, ":")
+	front, back, found := stringsCut(a, ":")
 	if !found {
 		return errors.New("Missing colon separator")
 	}
-	_ = d
-	c.front = e
-	c.back = f
-	c.comment = c1
+	c.front = front
+	c.back = back
+	c.sm = NewSupermemo2()
+	if c1 == "" {
+		return nil
+	}
+	err := c.sm.Unmarshal(c1)
+	if err != nil {
+		return err
+	}
 	return nil
-}
-
-func parseCard(str string) (*Card, error) {
-	a, b, found := stringsCut(str, "<!--srs:")
-	if !found {
-		return nil, errors.New("Missing comment start")
-	}
-	c, d, found := stringsCut(b, "-->")
-	if !found {
-		return nil, errors.New("Missing comment end")
-	}
-	e, f, found := stringsCut(a, ":")
-	if !found {
-		return nil, errors.New("Missing colon separator")
-	}
-	_ = d
-	return &Card{
-		front: e,
-		back: f,
-		comment: c,
-	}, nil
 }
 
 func stringsCut(s, sep string) (before, after string, found bool) {
