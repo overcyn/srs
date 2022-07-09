@@ -3,9 +3,8 @@ package main
 import (
 	"errors"
 	"math"
-	"strconv"
-	"strings"
 	"time"
+	"fmt"
 )
 
 // Supermemo2 calculates review intervals using SM2 algorithm
@@ -32,7 +31,7 @@ func (sm *Supermemo2) Advance(rating float64) {
 		if sm.Repetition == 0 {
 			sm.Interval = 1
 		} else if sm.Repetition == 2 {
-			sm.Interval = 2
+			sm.Interval = 6
 		} else {
 			sm.Interval = int(math.Round(float64(sm.Interval) * sm.Easiness))
 		}
@@ -50,38 +49,26 @@ func (sm *Supermemo2) Advance(rating float64) {
 
 // MarshalJSON implements json.Marshaller for Supermemo2
 func (sm *Supermemo2) Marshal() (string, error) {
-	return sm.NextReview.Format("2006-01-02T15:04:05Z") + "|" + strconv.Itoa(sm.Repetition) + "|" + strconv.Itoa(sm.Interval) + "|" + strconv.Itoa(int(sm.Easiness*100)), nil
+	str := fmt.Sprintf("%.2f|%d|%dd|%s", sm.Easiness, sm.Repetition, sm.Interval, sm.NextReview.Format("2006-01-02T15:04:05Z"))
+	return str, nil
 }
 
 // UnmarshalJSON implements json.Unmarshaller for Supermemo2
 func (sm *Supermemo2) Unmarshal(s string) error {
-	cs := strings.Split(s, "|")
-	if len(cs) != 4 {
-		return errors.New("Unexpected number of commas")
+	var nextReviewStr string
+	count, err := fmt.Sscanf(s, "%f|%d|%dd|%s", &sm.Easiness, &sm.Repetition, &sm.Interval, &nextReviewStr)
+	if err != nil {
+		return err
+	}
+	if count != 4 {
+		return errors.New("Invalid string")
 	}
 
-	nextReview, err := time.Parse("2006-01-02T15:04:05Z", cs[0])
+	nextReview, err := time.Parse("2006-01-02T15:04:05Z", nextReviewStr)
 	if err != nil {
 		return err
 	}
 	sm.NextReview = nextReview
-
-	repetition, err := strconv.Atoi(cs[1])
-	if err != nil {
-		return err
-	}
-	sm.Repetition = repetition
-
-	interval, err := strconv.Atoi(cs[2])
-	if err != nil {
-		return err
-	}
-	sm.Interval = interval
-
-	easiness, err := strconv.Atoi(cs[2])
-	if err != nil {
-		return err
-	}
-	sm.Easiness = float64(easiness) / 100
+	
 	return nil
 }

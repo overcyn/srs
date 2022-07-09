@@ -9,7 +9,6 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -25,31 +24,28 @@ func main() {
 
 	for _, v := range file.cards {
 		fmt.Printf("%v\n", strings.TrimSpace(v.front))
-
-		_, _, err := getChar()
-		if err != nil {
+		if _, _, err := getChar(); err != nil {
 			log.Fatal(err)
 		}
 
 		fmt.Printf("%v\n\n", strings.TrimSpace(v.back))
 
-		fmt.Printf("Score (1-5): ")
-		ascii, _, err := getChar()
-		if err != nil {
-			log.Fatal(err)
-		}
-		ratingInt, err := strconv.Atoi(string(ascii))
-		if err != nil {
-			return
-		}
+		fmt.Printf("Score (0-5): ")
+		var ratingInt int
+		fmt.Scanln(&ratingInt)
 		if ratingInt < 0 || ratingInt > 5 {
 			return
 		}
-		rating := float64(ratingInt)
-		fmt.Printf("\n\n")
+		fmt.Printf("\n")
 
 		if time.Since(v.sm.NextReview) > 0 {
-			v.sm.Advance(rating)
+			var prevSm = *v.sm
+
+			v.sm.Advance(float64(ratingInt))
+
+			fmt.Printf("Easiness: %.2f → %.2f\n", prevSm.Easiness, v.sm.Easiness)
+			fmt.Printf("Repetition: %v → %v\n", prevSm.Repetition, v.sm.Repetition)
+			fmt.Printf("Interval: %vd → %vd\n", prevSm.Interval, v.sm.Interval)
 		}
 
 		// Write to file
