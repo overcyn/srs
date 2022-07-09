@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"time"
-	"fmt"
 )
 
 // Supermemo2 calculates review intervals using SM2 algorithm
@@ -55,14 +55,14 @@ func (sm *Supermemo2) Advance(rating float64) {
 
 // MarshalJSON implements json.Marshaller for Supermemo2
 func (sm *Supermemo2) Marshal() (string, error) {
-	str := fmt.Sprintf("%.2f|%d✓|%dd|%s", sm.easiness, sm.repetition, sm.interval, sm.nextReview.Format("2006-01-02T15:04:05Z"))
+	str := fmt.Sprintf(":%.2f|%d✓|%dd|%s", sm.easiness, sm.repetition, sm.interval, sm.nextReview.Format("2006-01-02T15:04:05Z"))
 	return str, nil
 }
 
 // UnmarshalJSON implements json.Unmarshaller for Supermemo2
 func (sm *Supermemo2) Unmarshal(s string) error {
 	var nextReviewStr string
-	count, err := fmt.Sscanf(s, "%f|%d✓|%dd|%s", &sm.easiness, &sm.repetition, &sm.interval, &nextReviewStr)
+	count, err := fmt.Sscanf(s, ":%f|%d✓|%dd|%s", &sm.easiness, &sm.repetition, &sm.interval, &nextReviewStr)
 	if err != nil {
 		return err
 	}

@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"strconv"
 )
 
 func main() {
@@ -23,13 +24,18 @@ func main() {
 
 	for _, v := range file.cards {
 		fmt.Printf("%v", strings.TrimSpace(v.front))
-		fmt.Scanln()
+		var str string
+		fmt.Scanln(&str)
 		fmt.Printf("---\n%v\n\n", strings.TrimSpace(v.back))
 
 		if time.Since(v.sm.nextReview) > 0 {
 			fmt.Printf("Score (0-5): ")
-			var ratingInt int
-			fmt.Scanln(&ratingInt)
+			var ratingStr string
+			fmt.Scanln(&ratingStr)
+			ratingInt, err := strconv.Atoi(ratingStr)
+			if err != nil {
+				return
+			}
 			if ratingInt < 0 || ratingInt > 5 {
 				return
 			}
@@ -116,12 +122,12 @@ func (c *Card) MarshalString() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	str := c.front + ":" + c.back + "<!--srs:" + comment + "-->"
+	str := c.front + ":" + c.back + "<!--srs" + comment + "-->"
 	return str, nil
 }
 
 func (c *Card) UnmarshalString(str string) error {
-	a, b, found := stringsCut(str, "<!--srs:")
+	a, b, found := stringsCut(str, "<!--srs")
 	if !found {
 		return errors.New("Missing comment start")
 	}
