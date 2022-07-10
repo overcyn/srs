@@ -6,12 +6,14 @@
 
 ### Future
 
-Cat : Meow <!--srs:20220604,Interval,EF,Repetition-->  
-Dog : Woof <!--srs:MjAyMjA2M=-->  
-Sheep : Baa <!--srs:20220604,4,23-->  
-Cow : Moo <!--srs:20220604,10,92-->  
+Cat : Meow <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
+Dog : Woof <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
+Sheep : Baa <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
+Cow : Moo <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
 
-<!-- srs:20220604,4,4 -->
-Hello
-- - -
+<!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->
+Hello. 
+This is a multiline card.
+:
 Test
+

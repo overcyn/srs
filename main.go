@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	showAll := flag.Bool("all", false, "")
 	flag.Parse()
 	args := flag.Args()
 
@@ -22,22 +23,30 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for _, v := range file.cards {
-		fmt.Printf("%v", strings.TrimSpace(v.front))
-		var str string
-		fmt.Scanln(&str)
-		fmt.Printf("---\n%v\n\n", strings.TrimSpace(v.back))
+	if err := file.present(*showAll); err != nil {
+		log.Fatal(err)
+	}
+}
 
-		if time.Since(v.sm.nextReview) > 0 {
+func (f *File) present(showAll bool) error {
+	for _, v := range f.cards {
+		needsReview := time.Since(v.sm.nextReview) > 0
+		if needsReview || showAll {
+			fmt.Printf("%v", strings.TrimSpace(v.front))
+			var str string
+			fmt.Scanln(&str)
+			fmt.Printf("---\n%v\n\n", strings.TrimSpace(v.back))
+		}
+		if needsReview {
 			fmt.Printf("Score (0-5): ")
 			var ratingStr string
 			fmt.Scanln(&ratingStr)
 			ratingInt, err := strconv.Atoi(ratingStr)
 			if err != nil {
-				return
+				return err
 			}
 			if ratingInt < 0 || ratingInt > 5 {
-				return
+				return errors.New("Invalid rating")
 			}
 			fmt.Printf("\n")
 			var prevSm = *v.sm
@@ -47,13 +56,14 @@ func main() {
 			fmt.Printf("Easiness: %.2f → %.2f\n", prevSm.easiness, v.sm.easiness)
 			fmt.Printf("Repetition: %v✓ → %v✓\n", prevSm.repetition, v.sm.repetition)
 			fmt.Printf("Interval: %vd → %vd\n\n", prevSm.interval, v.sm.interval)
-		}
 
-		// Write to file
-		if err := file.write(); err != nil {
-			log.Fatal(err)
+			// Write to file
+			if err := f.write(); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 type File struct {
