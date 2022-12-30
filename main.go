@@ -109,9 +109,9 @@ func insertNewSupermemo(filename string) error {
 	}
 	str := string(bytes)
 
-	// Replace `["~"]` with random string "ABCD1234"
+	// Replace `["~"]` with nano id https://zelark.github.io/nano-id-cc/
 	for strings.Contains(str, "[\"~\"]") {
-		randStr := randSeq(8)
+		randStr := randSeq(21)
 		str = strings.Replace(str, "[\"~\"]", "[\"" + randStr + "\"]", 1)
 	}
 
@@ -190,7 +190,7 @@ type Card struct {
 	sm    *Supermemo2
 }
 
-var letters = []rune("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+var letters = []rune("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-")
 
 func randSeq(n int) string {
 	rand.Seed(time.Now().UnixNano())
