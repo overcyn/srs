@@ -55,22 +55,22 @@ func (sm *Supermemo2) Advance(rating float64) {
 
 // MarshalJSON implements json.Marshaller for Supermemo2
 func (sm *Supermemo2) Marshal() (string, error) {
-	str := fmt.Sprintf(":%.2f|%d✓|%dd|%s", sm.easiness, sm.repetition, sm.interval, sm.nextReview.Format("2006-01-02T15:04:05Z"))
+	str := fmt.Sprintf("%.2f|%d✓|%dd|%s", sm.easiness, sm.repetition, sm.interval, sm.nextReview.Format("2006-01-02T15:04:05.999999Z"))
 	return str, nil
 }
 
 // UnmarshalJSON implements json.Unmarshaller for Supermemo2
 func (sm *Supermemo2) Unmarshal(s string) error {
 	var nextReviewStr string
-	count, err := fmt.Sscanf(s, ":%f|%d✓|%dd|%s", &sm.easiness, &sm.repetition, &sm.interval, &nextReviewStr)
+	count, err := fmt.Sscanf(s, "%f|%d✓|%dd|%s", &sm.easiness, &sm.repetition, &sm.interval, &nextReviewStr)
 	if err != nil {
-		return err
+		return fmt.Errorf("Supermemo unmarshal failed: %w", err)
 	}
 	if count != 4 {
 		return errors.New("Invalid string")
 	}
 
-	nextReview, err := time.Parse("2006-01-02T15:04:05Z", nextReviewStr)
+	nextReview, err := time.Parse("2006-01-02T15:04:05.999999Z", nextReviewStr)
 	if err != nil {
 		return err
 	}

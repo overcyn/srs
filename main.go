@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -11,12 +10,19 @@ import (
 	"strings"
 	"time"
 	"strconv"
+	"math/rand"
+	"github.com/BurntSushi/toml"
+	// "github.com/pelletier/go-toml"
 )
 
 func main() {
 	showAll := flag.Bool("all", false, "")
 	flag.Parse()
 	args := flag.Args()
+
+	if err := insertNewSupermemo(args[0]); err != nil {
+		log.Fatal(err)
+	}
 
 	file, err := readFile(args[0])
 	if err != nil {
@@ -49,8 +55,8 @@ func (f *File) present(showAll bool) error {
 				return errors.New("Invalid rating")
 			}
 			fmt.Printf("\n")
-			var prevSm = *v.sm
 
+			var prevSm = *v.sm
 			v.sm.Advance(float64(ratingInt))
 
 			fmt.Printf("Easiness: %.2f → %.2f\n", prevSm.easiness, v.sm.easiness)
@@ -58,7 +64,7 @@ func (f *File) present(showAll bool) error {
 			fmt.Printf("Interval: %vd → %vd\n\n", prevSm.interval, v.sm.interval)
 
 			// Write to file
-			if err := f.write(); err != nil {
+			if err := f.writeCard(v); err != nil {
 				return err
 			}
 		}
@@ -68,103 +74,129 @@ func (f *File) present(showAll bool) error {
 
 type File struct {
 	filename string
-	lines    []string
-	cards    map[int]*Card
+	cards    []*Card
 }
 
-func (f *File) write() error {
-	buf := &bytes.Buffer{}
-	for i, line := range f.lines {
-		toWrite := line
-		if card, ok := f.cards[i]; ok {
-			var err error
-			if toWrite, err = card.MarshalString(); err != nil {
-				return err
-			}
-		}
-		if _, err := buf.WriteString(toWrite); err != nil {
-			return err
-		}
-		if i != len(f.lines)-1 {
-			if _, err := buf.WriteString("\n"); err != nil {
-				return err
-			}
-		}
+func (f *File) writeCard(card *Card) error {
+	// Read the file
+	buf, err := os.ReadFile(f.filename)
+	if err != nil {
+		return err
+	}
+	str := string(buf)
+
+	// Marshal the card info
+	smStr, err := card.sm.Marshal()
+	if err != nil {
+		return err
 	}
 
-	if err := os.WriteFile(f.filename, buf.Bytes(), fs.ModePerm); err != nil {
+	// Replace the string
+	str = strings.Replace(str, card.info, smStr, 1)
+
+	// Write the file
+	if err := os.WriteFile(f.filename, []byte(str), fs.ModePerm); err != nil {
+		return err
+	}
+	return nil
+}
+
+func insertNewSupermemo(filename string) error {
+	// Read the file
+	bytes, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	str := string(bytes)
+
+	// Replace `["~"]` with random string "ABCD1234"
+	for strings.Contains(str, "[\"~\"]") {
+		randStr := randSeq(8)
+		str = strings.Replace(str, "[\"~\"]", "[\"" + randStr + "\"]", 1)
+	}
+
+	// Replace `"~"` with default supermemo
+	for strings.Contains(str, "\"~\"") {
+		sm := NewSupermemo2()
+		smStr, err := sm.Marshal()
+		if err != nil {
+			return err
+		}
+		str = strings.Replace(str, "\"~\"", "\"" + smStr + "\"", 1)
+
+		// Sleep for a ms
+		time.Sleep(time.Millisecond)
+	}
+
+	// Write the file
+	if err := os.WriteFile(filename, []byte(str), fs.ModePerm); err != nil {
 		return err
 	}
 	return nil
 }
 
 func readFile(filename string) (*File, error) {
-	content, err := os.ReadFile(filename)
+	// Read the file
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	lines := strings.Split(string(content), "\n")
-	cards := map[int]*Card{}
-	for idx, i := range lines {
-		c := Card{}
-		if err := c.UnmarshalString(i); err != nil {
-			continue
-		}
-		cards[idx] = &c
+	// Unmarshal as TomlCard
+	tomlCards := map[string]*TomlCard{}
+	err = toml.Unmarshal(bytes, &tomlCards)
+	if err != nil {
+		return nil, err
 	}
 
+	// Convert to Card
+	cards := []*Card{}
+	for i := range tomlCards {
+		tomlCard := tomlCards[i]
+		sm := &Supermemo2{}
+		if err = sm.Unmarshal(tomlCard.I); err != nil {
+			return nil, err
+		}
+		front := tomlCard.Q
+		if front == "" {
+			front = i
+		}
+		c := &Card{
+			front: front,
+			back: tomlCard.A,
+			info: tomlCard.I,
+			sm: sm,
+		}
+		cards = append(cards, c)
+	}
+
+	// Return the file
 	return &File{
 		filename: filename,
-		lines:    lines,
 		cards:    cards,
 	}, nil
+}
+
+type TomlCard struct {
+	A string `toml: "a"`
+	Q string `toml: "q"`
+	I string `toml: "i"`
 }
 
 type Card struct {
 	front string
 	back  string
+	info  string
 	sm    *Supermemo2
 }
 
-func (c *Card) MarshalString() (string, error) {
-	comment, err := c.sm.Marshal()
-	if err != nil {
-		return "", err
-	}
-	str := c.front + ":" + c.back + "<!--srs" + comment + "-->"
-	return str, nil
-}
+var letters = []rune("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func (c *Card) UnmarshalString(str string) error {
-	a, b, found := stringsCut(str, "<!--srs")
-	if !found {
-		return errors.New("Missing comment start")
-	}
-	c1, _, found := stringsCut(b, "-->")
-	if !found {
-		return errors.New("Missing comment end")
-	}
-	front, back, found := stringsCut(a, ":")
-	if !found {
-		return errors.New("Missing colon separator")
-	}
-	c.front = front
-	c.back = back
-	c.sm = NewSupermemo2()
-	if c1 == "" {
-		return nil
-	}
-	err := c.sm.Unmarshal(c1)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func stringsCut(s, sep string) (before, after string, found bool) {
-	if i := strings.Index(s, sep); i >= 0 {
-		return s[:i], s[i+len(sep):], true
-	}
-	return s, "", false
+func randSeq(n int) string {
+	rand.Seed(time.Now().UnixNano())
+    b := make([]rune, n)
+    for i := range b {
+        b[i] = letters[rand.Intn(len(letters))]
+    }
+    return string(b)
 }

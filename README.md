@@ -4,16 +4,25 @@
 
 > ./srs test.md
 
-### Future
+### Syntax
 
-Cat : Meow <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
-Dog : Woof <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
-Sheep : Baa <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
-Cow : Moo <!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->  
+"ai".a = 'who "Obama là ai?"'
+"ai".i = "0.86|7✓|80d|2023-01-31T12:28:38Z"
+"ai".a = 'who "Obama là ai?"'
+"ai".i = "0.86|7✓|80d|2023-01-31T12:28:38Z"
+"ăn".a = 'eat'
+"ăn".i = "0.92|6✓|51d|2023-01-02T12:35:20Z"
+"anh".a = 'elder brother; you'
+"anh".i = "1.80|6✓|147d|2023-04-08T13:35:07Z"
 
-<!--srs:1.06|1✓|1d|2022-07-10T01:16:29Z-->
-Hello. 
-This is a multiline card.
-:
-Test
+["Number of children under 5 who die every day from poverty"]
+a = "27,000"
+i = "~"
 
+["Number of people living in extreme poverty?"]
+a = "1.4 billion"
+i = "~"
+
+["Poverty line in dollars per day"]
+a = "$1.25"
+i = "~"
