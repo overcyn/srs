@@ -109,20 +109,20 @@ func insertNewSupermemo(filename string) error {
 	}
 	str := string(bytes)
 
-	// Replace `["~"]` with nano id https://zelark.github.io/nano-id-cc/
-	for strings.Contains(str, "[\"~\"]") {
+	// Replace `[""]` with nano id https://zelark.github.io/nano-id-cc/
+	for strings.Contains(str, "[\"\"]\n") {
 		randStr := randSeq(21)
-		str = strings.Replace(str, "[\"~\"]", "[\"" + randStr + "\"]", 1)
+		str = strings.Replace(str, "[\"\"]\n", "[\"" + randStr + "\"]\n", 1)
 	}
 
-	// Replace `"~"` with default supermemo
-	for strings.Contains(str, "\"~\"") {
+	// Replace `i = ""` with default supermemo
+	for strings.Contains(str, "i = \"\"") {
 		sm := NewSupermemo2()
 		smStr, err := sm.Marshal()
 		if err != nil {
 			return err
 		}
-		str = strings.Replace(str, "\"~\"", "\"" + smStr + "\"", 1)
+		str = strings.Replace(str, "i = \"\"", "i = \"" + smStr + "\"", 1)
 
 		// Sleep for a ms
 		time.Sleep(time.Millisecond)
